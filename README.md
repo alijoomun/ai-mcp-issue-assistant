@@ -1,544 +1,275 @@
-### \# AI MCP Issue Assistant
+# AI MCP Issue Assistant
 
-### 
+## Overview
 
-### \## Overview
+`ai-mcp-issue-assistant` is a practical AI application that converts a rough business requirement into a structured GitHub-ready issue.
 
-### 
+The project demonstrates how to combine:
 
-### `ai-mcp-issue-assistant` is a practical AI application that converts a rough business requirement into a structured GitHub-ready issue.
+- A simple Streamlit web application
+- Google Gemini API as the LLM provider
+- A local MCP server concept
+- Secure API key management using environment variables
+- GitHub workflow for version control and collaboration
 
-### 
+The application is designed as a learning project for understanding how AI apps can use an LLM to generate useful business outputs and how MCP can be introduced as a tool layer.
 
-### The project demonstrates how to combine:
+---
 
-### 
+## What the Application Does
 
-### \* A simple Streamlit web application
+The user enters a rough requirement into the Streamlit interface.
 
-### \* Google Gemini API as the LLM provider
+The application then sends the requirement to Google Gemini and asks the model to generate a structured GitHub issue containing:
 
-### \* A local MCP server concept
+- Summary
+- User Story
+- Acceptance Criteria
+- Test Cases
+- Open Questions
+- Risks
 
-### \* Secure API key management using environment variables
+The final result can be displayed in the app and downloaded as a Markdown file.
 
-### \* GitHub workflow for version control and collaboration
+---
 
-### 
+## High-Level Flow
 
-### The application is designed as a learning project for understanding how AI apps can use an LLM to generate useful business outputs and how MCP can be introduced as a tool layer.
+```text
+User
+  |
+  v
+Streamlit Application
+  |
+  v
+Application reads GEMINI_API_KEY from PC environment variables
+  |
+  v
+Google Gemini API generates structured issue content
+  |
+  v
+Local MCP server provides a reusable formatting tool concept
+  |
+  v
+Final GitHub-ready issue is displayed to the user
+```
 
-### 
+### File Responsibilities
 
-### \---
+| File | Purpose |
+| --- | --- |
+| `app.py` | Streamlit user interface |
+| `issue_formatter.py` | Handles the Gemini API call |
+| `mcp_server.py` | Defines the local MCP formatting tool |
+| `requirements.txt` | Python dependencies |
+| `.env.example` | Documents the required environment variable |
+| `.gitignore` | Prevents unnecessary or sensitive files from being committed |
 
-### 
+---
 
-### \## What the Application Does
+## Google Gemini API Usage
 
-### 
+This project uses the Google Gemini API to generate structured content from a rough requirement.
 
-### The user enters a rough requirement into the Streamlit interface.
+The application sends a prompt to Gemini asking it to behave like a Product Owner, Business Analyst, and QA assistant.
 
-### 
+The model is instructed to return the output using the following structure:
 
-### The application then sends the requirement to Google Gemini and asks the model to generate a structured GitHub issue containing:
+```markdown
+## Summary
 
-### 
+## User Story
 
-### \* Summary
+## Acceptance Criteria
 
-### \* User Story
+## Test Cases
 
-### \* Acceptance Criteria
+## Open Questions
 
-### \* Test Cases
+## Risks
+```
 
-### \* Open Questions
+Example logic from `issue_formatter.py`:
 
-### \* Risks
+```python
+response = client.models.generate_content(
+    model="gemini-2.5-flash",
+    contents=prompt,
+)
+```
 
-### 
+The returned response is then displayed inside the Streamlit application.
 
-### The final result can be displayed in the app and downloaded as a Markdown file.
+---
 
-### 
+## API Key Storage
 
-### \---
+The Gemini API key must not be written directly in the source code.
 
-### 
+The application expects the key to be stored in a PC environment variable named:
 
-### \## High-Level Flow
+```text
+GEMINI_API_KEY
+```
 
-### 
+This keeps the API key outside the GitHub repository and reduces the risk of accidentally exposing it.
 
-### ```text
+---
 
-### User
+## Setting the Gemini API Key on Windows
 
-### &#x20;↓
+### Check if the key already exists
 
-### Streamlit Application
+Open PowerShell and run:
 
-### &#x20;↓
+```powershell
+echo $env:GEMINI_API_KEY
+```
 
-### Application reads GEMINI\_API\_KEY from PC environment variables
+If the key is displayed, the environment variable is already available.
 
-### &#x20;↓
+### Set the key permanently
 
-### Google Gemini API generates structured issue content
+Run the following command in PowerShell:
 
-### &#x20;↓
+```powershell
+setx GEMINI_API_KEY "your_api_key_here"
+```
 
-### Local MCP server provides a reusable formatting tool concept
+After running `setx`, close PowerShell and open it again.
 
-### &#x20;↓
+Then check again:
 
-### Final GitHub-ready issue is displayed to the user
+```powershell
+echo $env:GEMINI_API_KEY
+```
 
-### ```
+---
 
-### 
+## How the Application Reads the API Key
 
-### 
+The application reads the API key directly from the operating system environment variables.
 
-### \### File Responsibilities
+Example from `issue_formatter.py`:
 
-### 
+```python
+import os
 
-### | File                 | Purpose                                                      |
+from google import genai
 
-### | -------------------- | ------------------------------------------------------------ |
 
-### | `app.py`             | Streamlit user interface                                     |
+def get_gemini_client():
+    api_key = os.getenv("GEMINI_API_KEY")
 
-### | `issue\_formatter.py` | Handles the Gemini API call                                  |
+    if not api_key:
+        raise RuntimeError(
+            "GEMINI_API_KEY was not found in your PC environment variables. "
+            "Please create a Windows user or system environment variable named GEMINI_API_KEY."
+        )
 
-### | `mcp\_server.py`      | Defines the local MCP formatting tool                        |
+    return genai.Client(api_key=api_key)
+```
 
-### | `requirements.txt`   | Python dependencies                                          |
+No `.env` file is required for this project.
 
-### | `.env.example`       | Documents the required environment variable                  |
+The `.env.example` file is only used as documentation to explain which environment variable is expected.
 
-### | `.gitignore`         | Prevents unnecessary or sensitive files from being committed |
+---
 
-### 
+## Setup Instructions
 
-### \---
+### 1. Clone the repository
 
-### 
+```powershell
+git clone https://github.com/alijoomun/ai-mcp-issue-assistant.git
+cd ai-mcp-issue-assistant
+```
 
-### \## Google Gemini API Usage
+### 2. Create a Python virtual environment
 
-### 
+```powershell
+python -m venv .venv
+.venv\Scripts\activate
+```
 
-### This project uses the Google Gemini API to generate structured content from a rough requirement.
+### 3. Install dependencies
 
-### 
+```powershell
+pip install -r requirements.txt
+```
 
-### The application sends a prompt to Gemini asking it to behave like a Product Owner, Business Analyst, and QA assistant.
+### 4. Confirm the Gemini API key exists
 
-### 
+```powershell
+echo $env:GEMINI_API_KEY
+```
 
-### The model is instructed to return the output using the following structure:
+### 5. Run the application
 
-### 
+```powershell
+streamlit run app.py
+```
 
-### ```markdown
+---
 
-### \## Summary
+## Dependencies
 
-### 
+The project uses the following Python packages:
 
-### \## User Story
+```text
+streamlit
+google-genai
+mcp
+```
 
-### 
+---
 
-### \## Acceptance Criteria
+## Example Test Case
 
-### 
+Use the following automobile-related requirement to test the application:
 
-### \## Test Cases
+```text
+A car rental company wants customers to be able to reserve a vehicle online. The customer should select a pickup location, return location, pickup date, return date, and car category. The system should check availability and confirm the reservation if a suitable vehicle is available.
+```
 
-### 
+Expected output should include:
 
-### \## Open Questions
+- A clear summary of the car reservation feature
+- A user story from the customer perspective
+- Acceptance criteria using Given/When/Then format
+- Functional test cases for successful and failed reservation scenarios
+- Open questions for missing business rules
+- Risks related to availability, booking conflicts, validation, and integration
 
-### 
+---
 
-### \## Risks
+## Security Notes
 
-### ```
+Do not commit API keys to GitHub.
 
-### 
+Avoid placing real secrets in:
 
-### Example logic from `issue\_formatter.py`:
+- Source code
+- README files
+- `.env.example`
+- Git commit history
 
-### 
+The real Gemini API key should only exist in the local machine environment variable:
 
-### ```python
+```text
+GEMINI_API_KEY
+```
 
-### response = client.models.generate\_content(
+---
 
-### &#x20;   model="gemini-2.5-flash",
+## Goal of the Project
 
-### &#x20;   contents=prompt,
+The goal of this project is to provide a simple but practical learning example of how to build an AI-enabled application using:
 
-### )
+- A real LLM API
+- Secure API key handling
+- A simple web interface
+- A local MCP server concept
+- GitHub-based project structure and workflow
 
-### ```
-
-### 
-
-### The returned response is then displayed inside the Streamlit application.
-
-### 
-
-### \---
-
-### 
-
-### \## API Key Storage
-
-### 
-
-### The Gemini API key must not be written directly in the source code.
-
-### 
-
-### The application expects the key to be stored in a PC environment variable named:
-
-### 
-
-### ```text
-
-### GEMINI\_API\_KEY
-
-### ```
-
-### 
-
-### This keeps the API key outside the GitHub repository and reduces the risk of accidentally exposing it.
-
-### 
-
-### \---
-
-### 
-
-### \## Setting the Gemini API Key on Windows
-
-### 
-
-### \### Check if the key already exists
-
-### 
-
-### Open PowerShell and run:
-
-### 
-
-### ```powershell
-
-### echo $env:GEMINI\_API\_KEY
-
-### ```
-
-### 
-
-### If the key is displayed, the environment variable is already available.
-
-### 
-
-### \### Set the key permanently
-
-### 
-
-### Run the following command in PowerShell:
-
-### 
-
-### ```powershell
-
-### setx GEMINI\_API\_KEY "your\_api\_key\_here"
-
-### ```
-
-### 
-
-### After running `setx`, close PowerShell and open it again.
-
-### 
-
-### Then check again:
-
-### 
-
-### ```powershell
-
-### echo $env:GEMINI\_API\_KEY
-
-### ```
-
-### 
-
-### \---
-
-### 
-
-### \## How the Application Reads the API Key
-
-### 
-
-### The application reads the API key directly from the operating system environment variables.
-
-### 
-
-### Example from `issue\_formatter.py`:
-
-### 
-
-### ```python
-
-### import os
-
-### from google import genai
-
-### 
-
-### 
-
-### def get\_gemini\_client():
-
-### &#x20;   api\_key = os.getenv("GEMINI\_API\_KEY")
-
-### 
-
-### &#x20;   if not api\_key:
-
-### &#x20;       raise RuntimeError(
-
-### &#x20;           "GEMINI\_API\_KEY was not found in your PC environment variables. "
-
-### &#x20;           "Please create a Windows user or system environment variable named GEMINI\_API\_KEY."
-
-### &#x20;       )
-
-### 
-
-### &#x20;   return genai.Client(api\_key=api\_key)
-
-### ```
-
-### 
-
-### No `.env` file is required for this project.
-
-### 
-
-### The `.env.example` file is only used as documentation to explain which environment variable is expected.
-
-### 
-
-### \---
-
-### 
-
-### 
-
-### \## Setup Instructions
-
-### 
-
-### \### 1. Clone the repository
-
-### 
-
-### ```powershell
-
-### git clone https://github.com/alijoomun/ai-mcp-issue-assistant.git
-
-### cd ai-mcp-issue-assistant
-
-### ```
-
-### 
-
-### \### 2. Create a Python virtual environment
-
-### 
-
-### ```powershell
-
-### python -m venv .venv
-
-### .venv\\Scripts\\activate
-
-### ```
-
-### 
-
-### \### 3. Install dependencies
-
-### 
-
-### ```powershell
-
-### pip install -r requirements.txt
-
-### ```
-
-### 
-
-### \### 4. Confirm the Gemini API key exists
-
-### 
-
-### ```powershell
-
-### echo $env:GEMINI\_API\_KEY
-
-### ```
-
-### 
-
-### \### 5. Run the application
-
-### 
-
-### ```powershell
-
-### streamlit run app.py
-
-### ```
-
-### 
-
-### \---
-
-### 
-
-### \## Dependencies
-
-### 
-
-### The project uses the following Python packages:
-
-### 
-
-### ```text
-
-### streamlit
-
-### google-genai
-
-### mcp
-
-### ```
-
-### 
-
-### \---
-
-### 
-
-### \## Example Test Case
-
-### 
-
-### Use the following automobile-related requirement to test the application:
-
-### 
-
-### ```text
-
-### A car rental company wants customers to be able to reserve a vehicle online. The customer should select a pickup location, return location, pickup date, return date, and car category. The system should check availability and confirm the reservation if a suitable vehicle is available.
-
-### ```
-
-### 
-
-### Expected output should include:
-
-### 
-
-### \* A clear summary of the car reservation feature
-
-### \* A user story from the customer perspective
-
-### \* Acceptance criteria using Given/When/Then format
-
-### \* Functional test cases for successful and failed reservation scenarios
-
-### \* Open questions for missing business rules
-
-### \* Risks related to availability, booking conflicts, validation, and integration
-
-### 
-
-### \---
-
-### 
-
-### \## Security Notes
-
-### 
-
-### Do not commit API keys to GitHub.
-
-### 
-
-### Avoid placing real secrets in:
-
-### 
-
-### \* Source code
-
-### \* README files
-
-### \* `.env.example`
-
-### \* Git commit history
-
-### 
-
-### The real Gemini API key should only exist in the local machine environment variable:
-
-### 
-
-### ```text
-
-### GEMINI\_API\_KEY
-
-### ```
-
-### 
-
-### \---
-
-### 
-
-### \## Goal of the Project
-
-### 
-
-### The goal of this project is to provide a simple but practical learning example of how to build an AI-enabled application using:
-
-### 
-
-### \* A real LLM API
-
-### \* Secure API key handling
-
-### \* A simple web interface
-
-### \* A local MCP server concept
-
-### \* GitHub-based project structure and workflow
-
-### 
-
-### This project can be used as a foundation for more advanced AI agent applications.
-
-
-
+This project can be used as a foundation for more advanced AI agent applications.
